@@ -16,14 +16,17 @@ const requireAuth = (req, res, next) => {
   try {
     const decoded = jwt.verify(token, config.jwt.secret);
     
-    // JWT from BNX Mail contains: email, appName, userId
-    if (!decoded.email || !decoded.appName) {
+    // JWT from BNX Mail contains: sub (email), app_name
+    const email = decoded.sub || decoded.email;
+    const appName = decoded.app_name || decoded.appName;
+
+    if (!email || !appName) {
       return next(new AppError('Invalid token payload. Missing required fields.', StatusCodes.UNAUTHORIZED));
     }
 
     req.user = {
-      email: decoded.email,
-      appName: decoded.appName,
+      email: email,
+      appName: appName,
       userId: decoded.userId || null
     };
 
