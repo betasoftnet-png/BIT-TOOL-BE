@@ -38,10 +38,12 @@ router.post('/sessions/:sessionId/export', validate(exportSchema), calculatorCon
 const compareController = require('../controllers/compare.controller');
 
 router.get('/compare/history', compareController.getHistory);
+router.delete('/compare/history', compareController.deleteAllHistory);
 router.get('/compare/sessions/:id', compareController.getSession);
 router.post('/compare/sessions', compareController.createSession);
 router.post('/compare/sessions/:sessionId/items', compareController.addItem);
 router.put('/compare/sessions/:sessionId/items/:id', compareController.updateItem);
 router.delete('/compare/sessions/:sessionId/items/:id', compareController.deleteItem);
+router.delete('/compare/sessions/:id', compareController.deleteSession);
 
 module.exports = router;

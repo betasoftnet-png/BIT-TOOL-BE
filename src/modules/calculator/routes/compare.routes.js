@@ -10,6 +10,7 @@ router.use(requireAuth);
 // Session Routes
 router.post('/sessions', validate(createCompareSessionSchema), compareController.createSession);
 router.get('/history', compareController.getHistory);
+router.delete('/history', compareController.deleteAllHistory);
 router.get('/sessions/:id', compareController.getSession);
 router.put('/sessions/:id', validate(updateCompareSessionSchema), compareController.updateSession);
 router.delete('/sessions/:id', compareController.deleteSession);

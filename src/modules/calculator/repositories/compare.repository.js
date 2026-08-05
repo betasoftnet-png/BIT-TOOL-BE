@@ -40,6 +40,12 @@ class CompareRepository {
     await item.destroy();
     return true;
   }
+
+  async deleteSessionsByUserAndApp(userEmail, applicationName) {
+    return await models.ComparisonSession.destroy({
+      where: { userEmail, applicationName }
+    });
+  }
 }
 
 module.exports = new CompareRepository();

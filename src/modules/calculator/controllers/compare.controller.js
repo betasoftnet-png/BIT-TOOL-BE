@@ -12,6 +12,16 @@ exports.getHistory = async (req, res, next) => {
   }
 };
 
+exports.deleteAllHistory = async (req, res, next) => {
+  try {
+    const { email, appName } = req.user;
+    await compareService.deleteAllHistory(email, appName);
+    return ApiResponse.success(res, null, 'Compare history deleted successfully');
+  } catch (error) {
+    next(error);
+  }
+};
+
 exports.getSession = async (req, res, next) => {
   try {
     const { email, appName } = req.user;

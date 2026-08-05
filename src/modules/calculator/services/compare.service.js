@@ -7,6 +7,10 @@ class CompareService {
     return await compareRepository.findSessionsByUserAndApp(userEmail, applicationName);
   }
 
+  async deleteAllHistory(userEmail, applicationName) {
+    return await compareRepository.deleteSessionsByUserAndApp(userEmail, applicationName);
+  }
+
   async getSession(sessionId, userEmail, applicationName) {
     const session = await compareRepository.findSessionById(sessionId);
     if (!session) {
