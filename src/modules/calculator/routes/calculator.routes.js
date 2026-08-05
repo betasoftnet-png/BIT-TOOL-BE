@@ -34,7 +34,14 @@ router.post('/sessions/:sessionId/share', calculatorController.generateShareLink
 router.post('/sessions/:sessionId/export', validate(exportSchema), calculatorController.exportSession);
 
 // Note: This route is unauthenticated theoretically (if sharing publicly), 
-// but we'll leave it here and maybe bypass auth in production for this specific route.
-router.get('/share/:token', calculatorController.getSharedSession);
+// Compare Mode Routes
+const compareController = require('../controllers/compare.controller');
+
+router.get('/compare/history', compareController.getHistory);
+router.get('/compare/sessions/:id', compareController.getSession);
+router.post('/compare/sessions', compareController.createSession);
+router.post('/compare/sessions/:sessionId/items', compareController.addItem);
+router.put('/compare/sessions/:sessionId/items/:id', compareController.updateItem);
+router.delete('/compare/sessions/:sessionId/items/:id', compareController.deleteItem);
 
 module.exports = router;

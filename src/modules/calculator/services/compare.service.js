@@ -1,125 +1,88 @@
-const { models } = require('../../../database/connection');
+const compareRepository = require('../repositories/compare.repository');
 const AppError = require('../../../shared/exceptions/AppError');
 const { StatusCodes } = require('http-status-codes');
 
 class CompareService {
-  
+  async getHistory(userEmail, applicationName) {
+    return await compareRepository.findSessionsByUserAndApp(userEmail, applicationName);
+  }
+
+  async getSession(sessionId, userEmail, applicationName) {
+    const session = await compareRepository.findSessionById(sessionId);
+    if (!session) {
+      throw new AppError('Comparison session not found', StatusCodes.NOT_FOUND);
+    }
+    if (session.userEmail !== userEmail || session.applicationName !== applicationName) {
+      throw new AppError('Unauthorized access to this session', StatusCodes.FORBIDDEN);
+    }
+    return session;
+  }
+
   async createSession(userEmail, applicationName, data) {
-    return await models.ComparisonSession.create({
+    return await compareRepository.createSession({
       ...data,
       userEmail,
       applicationName
     });
   }
 
-  async getSessionById(sessionId, userEmail, applicationName) {
-    const session = await models.ComparisonSession.findByPk(sessionId, {
-      include: [
-        { model: models.ComparisonItem, as: 'items' }
-      ],
-      order: [[{ model: models.ComparisonItem, as: 'items' }, 'sequence', 'ASC']]
-    });
-
-    if (!session) {
-      throw new AppError('Comparison Session not found', StatusCodes.NOT_FOUND);
-    }
-    
-    if (session.userEmail !== userEmail || session.applicationName !== applicationName) {
-      throw new AppError('Unauthorized access to this session', StatusCodes.FORBIDDEN);
-    }
-
-    return session;
-  }
-
-  async getHistory(userEmail, applicationName, query) {
-    const { limit = 10, offset = 0, isArchived = false } = query;
-    return await models.ComparisonSession.findAndCountAll({
-      where: { userEmail, applicationName, isArchived },
-      limit,
-      offset,
-      order: [['updatedAt', 'DESC']]
-    });
-  }
-
-  async updateSession(sessionId, userEmail, applicationName, data) {
-    const session = await this.getSessionById(sessionId, userEmail, applicationName);
-    return await session.update(data);
-  }
-
-  async deleteSession(sessionId, userEmail, applicationName) {
-    const session = await this.getSessionById(sessionId, userEmail, applicationName);
-    await session.destroy();
-    return true;
-  }
-
-  // ======================
-  // ITEMS LOGIC
-  // ======================
-
-  _calculateItemStats(vendorA_Value, vendorB_Value) {
-    const valA = parseFloat(vendorA_Value || 0);
-    const valB = parseFloat(vendorB_Value || 0);
-    
-    // Default logic: lower is better (e.g. costs). 
-    // If the frontend wants higher is better, they can interpret the difference themselves,
-    // but we will calculate absolute difference and standard winner logic.
-    const difference = Math.abs(valA - valB);
-    
-    let percentageDifference = 0;
-    if (valA !== 0) {
-      percentageDifference = ((valB - valA) / valA) * 100;
-    }
-
-    let winner = 'Tie';
-    if (valA < valB) winner = 'Vendor A'; // Assuming lower cost = winner
-    else if (valB < valA) winner = 'Vendor B';
-
-    // If both 0, None
-    if (valA === 0 && valB === 0) winner = 'None';
-
-    return { difference, percentageDifference, winner };
-  }
-
   async addItem(sessionId, userEmail, applicationName, data) {
-    await this.getSessionById(sessionId, userEmail, applicationName);
+    await this.getSession(sessionId, userEmail, applicationName); // Auth check
     
-    const stats = this._calculateItemStats(data.vendorA_Value, data.vendorB_Value);
+    // Determine difference and winner
+    const valA = parseFloat(data.vendorA_Value || 0);
+    const valB = parseFloat(data.vendorB_Value || 0);
+    const difference = Math.abs(valA - valB);
+    const percentageDifference = valA > 0 ? (difference / valA) * 100 : 0;
     
-    return await models.ComparisonItem.create({
+    let winner = 'None';
+    if (valA > valB) winner = 'Vendor A';
+    else if (valB > valA) winner = 'Vendor B';
+    else if (valA === valB && valA !== 0) winner = 'Tie';
+
+    return await compareRepository.addItem({
       ...data,
       sessionId,
-      ...stats
+      difference,
+      percentageDifference,
+      winner
     });
   }
 
   async updateItem(itemId, sessionId, userEmail, applicationName, data) {
-    await this.getSessionById(sessionId, userEmail, applicationName);
+    await this.getSession(sessionId, userEmail, applicationName); // Auth check
     
-    const item = await models.ComparisonItem.findByPk(itemId);
-    if (!item || item.sessionId !== sessionId) {
+    const valA = parseFloat(data.vendorA_Value !== undefined ? data.vendorA_Value : 0);
+    const valB = parseFloat(data.vendorB_Value !== undefined ? data.vendorB_Value : 0);
+    const difference = Math.abs(valA - valB);
+    const percentageDifference = valA > 0 ? (difference / valA) * 100 : 0;
+    
+    let winner = 'None';
+    if (valA > valB) winner = 'Vendor A';
+    else if (valB > valA) winner = 'Vendor B';
+    else if (valA === valB && valA !== 0) winner = 'Tie';
+
+    const item = await compareRepository.updateItem(itemId, {
+      ...data,
+      difference,
+      percentageDifference,
+      winner
+    });
+
+    if (!item) {
       throw new AppError('Item not found', StatusCodes.NOT_FOUND);
     }
 
-    const valA = data.vendorA_Value !== undefined ? data.vendorA_Value : item.vendorA_Value;
-    const valB = data.vendorB_Value !== undefined ? data.vendorB_Value : item.vendorB_Value;
-    
-    const stats = this._calculateItemStats(valA, valB);
-    
-    await item.update({ ...data, ...stats });
-    
-    return await this.getSessionById(sessionId, userEmail, applicationName);
+    return await this.getSession(sessionId, userEmail, applicationName); // Return updated session
   }
 
   async deleteItem(itemId, sessionId, userEmail, applicationName) {
-    await this.getSessionById(sessionId, userEmail, applicationName);
-    
-    const item = await models.ComparisonItem.findByPk(itemId);
-    if (!item || item.sessionId !== sessionId) {
+    await this.getSession(sessionId, userEmail, applicationName); // Auth check
+    const deleted = await compareRepository.deleteItem(itemId);
+    if (!deleted) {
       throw new AppError('Item not found', StatusCodes.NOT_FOUND);
     }
-
-    await item.destroy();
-    return await this.getSessionById(sessionId, userEmail, applicationName);
+    return await this.getSession(sessionId, userEmail, applicationName); // Return updated session
   }
 }
 
