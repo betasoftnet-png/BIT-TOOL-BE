@@ -33,7 +33,14 @@ class SessionRepository {
       where: whereClause,
       limit,
       offset,
-      order: [['updatedAt', 'DESC']]
+      include: [
+        { model: models.CalculatorItem, as: 'items' }
+      ],
+      order: [
+        ['updatedAt', 'DESC'],
+        [{ model: models.CalculatorItem, as: 'items' }, 'sequence', 'ASC']
+      ],
+      distinct: true // Required when using include with findAndCountAll to count main model correctly
     });
   }
 
