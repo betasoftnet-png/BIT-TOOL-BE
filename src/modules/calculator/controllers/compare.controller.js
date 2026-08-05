@@ -64,3 +64,23 @@ exports.deleteItem = async (req, res, next) => {
     next(error);
   }
 };
+
+exports.updateSession = async (req, res, next) => {
+  try {
+    const { email, appName } = req.user;
+    const session = await compareService.updateSession(req.params.id, email, appName, req.body);
+    return ApiResponse.success(res, session, 'Compare session updated successfully');
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.deleteSession = async (req, res, next) => {
+  try {
+    const { email, appName } = req.user;
+    await compareService.deleteSession(req.params.id, email, appName);
+    return ApiResponse.success(res, null, 'Compare session deleted successfully');
+  } catch (error) {
+    next(error);
+  }
+};

@@ -84,6 +84,17 @@ class CompareService {
     }
     return await this.getSession(sessionId, userEmail, applicationName); // Return updated session
   }
+
+  async updateSession(sessionId, userEmail, applicationName, data) {
+    const session = await this.getSession(sessionId, userEmail, applicationName);
+    return await session.update(data);
+  }
+
+  async deleteSession(sessionId, userEmail, applicationName) {
+    const session = await this.getSession(sessionId, userEmail, applicationName);
+    await session.destroy();
+    return true;
+  }
 }
 
 module.exports = new CompareService();
