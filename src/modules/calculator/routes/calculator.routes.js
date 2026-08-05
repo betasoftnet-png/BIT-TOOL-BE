@@ -13,6 +13,7 @@ router.get('/history', calculatorController.getHistory);
 router.get('/sessions/:id', calculatorController.getSession);
 router.put('/sessions/:id', validate(updateSessionSchema), calculatorController.updateSession);
 router.delete('/sessions/:id', calculatorController.deleteSession);
+router.delete('/sessions', calculatorController.clearHistory);
 router.post('/sessions/:id/archive', calculatorController.archiveSession);
 router.post('/sessions/:id/restore', calculatorController.restoreSession);
 

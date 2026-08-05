@@ -56,6 +56,15 @@ class SessionRepository {
     await session.destroy();
     return true;
   }
+
+  async deleteAll(userEmail, applicationName) {
+    return await models.CalculatorSession.destroy({
+      where: {
+        userEmail,
+        applicationName
+      }
+    });
+  }
 }
 
 module.exports = new SessionRepository();

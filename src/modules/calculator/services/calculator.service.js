@@ -46,6 +46,10 @@ class CalculatorService {
     return await sessionRepository.delete(sessionId);
   }
 
+  async clearHistory(userEmail, applicationName) {
+    return await sessionRepository.deleteAll(userEmail, applicationName);
+  }
+
   // ======================
   // TAPE ITEM MANAGEMENT
   // ======================

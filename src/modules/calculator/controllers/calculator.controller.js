@@ -52,6 +52,16 @@ exports.deleteSession = async (req, res, next) => {
   }
 };
 
+exports.clearHistory = async (req, res, next) => {
+  try {
+    const { email, appName } = req.user;
+    const deletedCount = await calculatorService.clearHistory(email, appName);
+    return ApiResponse.success(res, { count: deletedCount }, 'All history cleared successfully');
+  } catch (error) {
+    next(error);
+  }
+};
+
 exports.addItem = async (req, res, next) => {
   try {
     const { email, appName } = req.user;
