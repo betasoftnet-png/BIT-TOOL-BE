@@ -1,19 +1,19 @@
 const { models } = require('../../../database/connection');
-const { CalculatorSession, CalculatorItem, CalculatorCategory, CalculatorTag } = models;
+
 
 class SessionRepository {
   async create(data) {
-    return await CalculatorSession.create(data);
+    return await models.CalculatorSession.create(data);
   }
 
   async findById(id) {
-    return await CalculatorSession.findByPk(id, {
+    return await models.CalculatorSession.findByPk(id, {
       include: [
-        { model: CalculatorItem, as: 'items' },
-        { model: CalculatorCategory, as: 'category' },
-        { model: CalculatorTag, as: 'tags' }
+        { model: models.CalculatorItem, as: 'items' },
+        { model: models.CalculatorCategory, as: 'category' },
+        { model: models.CalculatorTag, as: 'tags' }
       ],
-      order: [[{ model: CalculatorItem, as: 'items' }, 'sequence', 'ASC']]
+      order: [[{ model: models.CalculatorItem, as: 'items' }, 'sequence', 'ASC']]
     });
   }
 
@@ -29,7 +29,7 @@ class SessionRepository {
     if (mode) whereClause.mode = mode;
     if (categoryId) whereClause.categoryId = categoryId;
 
-    return await CalculatorSession.findAndCountAll({
+    return await models.CalculatorSession.findAndCountAll({
       where: whereClause,
       limit,
       offset,
@@ -38,13 +38,13 @@ class SessionRepository {
   }
 
   async update(id, data) {
-    const session = await CalculatorSession.findByPk(id);
+    const session = await models.CalculatorSession.findByPk(id);
     if (!session) return null;
     return await session.update(data);
   }
 
   async delete(id) {
-    const session = await CalculatorSession.findByPk(id);
+    const session = await models.CalculatorSession.findByPk(id);
     if (!session) return null;
     await session.destroy();
     return true;

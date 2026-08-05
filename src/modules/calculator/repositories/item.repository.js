@@ -1,18 +1,18 @@
 const { models } = require('../../../database/connection');
-const { CalculatorItem } = models;
+
 const { Op } = require('sequelize');
 
 class ItemRepository {
   async create(data, transaction = null) {
-    return await CalculatorItem.create(data, { transaction });
+    return await models.CalculatorItem.create(data, { transaction });
   }
 
   async findById(id) {
-    return await CalculatorItem.findByPk(id);
+    return await models.CalculatorItem.findByPk(id);
   }
 
   async findBySessionId(sessionId, transaction = null) {
-    return await CalculatorItem.findAll({
+    return await models.CalculatorItem.findAll({
       where: { sessionId },
       order: [['sequence', 'ASC']],
       transaction
@@ -20,7 +20,7 @@ class ItemRepository {
   }
 
   async findSubsequentItems(sessionId, sequence, transaction = null) {
-    return await CalculatorItem.findAll({
+    return await models.CalculatorItem.findAll({
       where: {
         sessionId,
         sequence: {
@@ -33,13 +33,13 @@ class ItemRepository {
   }
 
   async update(id, data, transaction = null) {
-    const item = await CalculatorItem.findByPk(id, { transaction });
+    const item = await models.CalculatorItem.findByPk(id, { transaction });
     if (!item) return null;
     return await item.update(data, { transaction });
   }
 
   async delete(id, transaction = null) {
-    const item = await CalculatorItem.findByPk(id, { transaction });
+    const item = await models.CalculatorItem.findByPk(id, { transaction });
     if (!item) return null;
     await item.destroy({ transaction });
     return true;
@@ -47,7 +47,7 @@ class ItemRepository {
   
   async bulkUpdate(items, transaction = null) {
     const promises = items.map(item => 
-      CalculatorItem.update(
+      models.CalculatorItem.update(
         { runningTotal: item.runningTotal, value: item.value, operator: item.operator }, 
         { where: { id: item.id }, transaction }
       )
