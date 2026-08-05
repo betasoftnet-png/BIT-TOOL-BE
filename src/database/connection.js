@@ -53,6 +53,12 @@ const connectDB = async () => {
     });
     
     logger.info('Models loaded and associated successfully.');
+
+    // Auto-sync database in development mode
+    if (config.env === 'development') {
+      await sequelize.sync({ alter: true });
+      logger.info('Database schema synced successfully.');
+    }
   } catch (error) {
     logger.error('Unable to connect to the database:', error);
     process.exit(1);
