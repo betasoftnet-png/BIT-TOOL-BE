@@ -6,9 +6,11 @@ class ContactRepository {
   }
 
   async findById(id, userEmail, applicationName) {
-    return await models.Contact.findOne({
-      where: { id, userEmail, applicationName }
-    });
+    const where = { id, userEmail };
+    if (applicationName) {
+      where.applicationName = applicationName;
+    }
+    return await models.Contact.findOne({ where });
   }
 
   async findByUserAndApp(userEmail, applicationName, query = {}) {

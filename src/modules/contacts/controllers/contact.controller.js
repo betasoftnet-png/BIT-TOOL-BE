@@ -34,8 +34,8 @@ exports.getAllContacts = async (req, res, next) => {
 
 exports.getContact = async (req, res, next) => {
   try {
-    const { email, appName } = req.user;
-    const contact = await contactService.getContactById(req.params.id, email, appName);
+    const { email } = req.user;
+    const contact = await contactService.getContactById(req.params.id, email, null);
     return ApiResponse.success(res, contact, 'Contact retrieved successfully');
   } catch (error) {
     next(error);
@@ -44,8 +44,8 @@ exports.getContact = async (req, res, next) => {
 
 exports.updateContact = async (req, res, next) => {
   try {
-    const { email, appName } = req.user;
-    const contact = await contactService.updateContact(req.params.id, email, appName, req.body);
+    const { email } = req.user;
+    const contact = await contactService.updateContact(req.params.id, email, null, req.body);
     return ApiResponse.success(res, contact, 'Contact updated successfully');
   } catch (error) {
     next(error);
@@ -65,8 +65,8 @@ exports.updateExternalContact = async (req, res, next) => {
 
 exports.deleteContact = async (req, res, next) => {
   try {
-    const { email, appName } = req.user;
-    await contactService.deleteContact(req.params.id, email, appName);
+    const { email } = req.user;
+    await contactService.deleteContact(req.params.id, email, null);
     return ApiResponse.success(res, null, 'Contact deleted successfully');
   } catch (error) {
     next(error);
