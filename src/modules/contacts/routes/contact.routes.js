@@ -7,10 +7,10 @@ const requireAuth = require('../../../shared/authentication/jwt.middleware');
 // All contact routes require authentication
 router.use(requireAuth);
 
-router.post('/', validate(createContactSchema), contactController.createContact);
-router.get('/', contactController.getContacts);
-router.get('/:id', contactController.getContact);
-router.put('/:id', validate(updateContactSchema), contactController.updateContact);
-router.delete('/:id', contactController.deleteContact);
+router.post('/add', validate(createContactSchema), contactController.createContact);
+router.get('/get', contactController.getContacts);
+router.get('/get/:id', contactController.getContact);
+router.put('/update/:id', validate(updateContactSchema), contactController.updateContact);
+router.delete('/delete/:id', contactController.deleteContact);
 
 module.exports = router;
