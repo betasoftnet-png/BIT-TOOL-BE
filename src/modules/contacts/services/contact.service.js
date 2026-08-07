@@ -23,6 +23,10 @@ class ContactService {
     return await contactRepository.findByUserAndApp(userEmail, applicationName, query);
   }
 
+  async getAllContacts(userEmail, query) {
+    return await contactRepository.findAllByUser(userEmail, query);
+  }
+
   async updateContact(id, userEmail, applicationName, data) {
     const updated = await contactRepository.update(id, userEmail, applicationName, data);
     if (!updated) {

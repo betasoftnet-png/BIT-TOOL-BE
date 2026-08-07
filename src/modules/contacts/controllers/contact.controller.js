@@ -22,6 +22,16 @@ exports.getContacts = async (req, res, next) => {
   }
 };
 
+exports.getAllContacts = async (req, res, next) => {
+  try {
+    const { email } = req.user;
+    const contacts = await contactService.getAllContacts(email, req.query);
+    return ApiResponse.success(res, contacts, 'All contacts across applications retrieved successfully');
+  } catch (error) {
+    next(error);
+  }
+};
+
 exports.getContact = async (req, res, next) => {
   try {
     const { email, appName } = req.user;

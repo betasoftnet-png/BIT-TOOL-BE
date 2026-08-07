@@ -21,6 +21,16 @@ class ContactRepository {
     });
   }
 
+  async findAllByUser(userEmail, query = {}) {
+    const { limit = 10, offset = 0 } = query;
+    return await models.Contact.findAndCountAll({
+      where: { userEmail },
+      limit,
+      offset,
+      order: [['createdAt', 'DESC']]
+    });
+  }
+
   async update(id, userEmail, applicationName, data) {
     const contact = await this.findById(id, userEmail, applicationName);
     if (!contact) return null;

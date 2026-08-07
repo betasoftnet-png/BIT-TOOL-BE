@@ -9,6 +9,7 @@ router.use(requireAuth);
 
 router.post('/add', validate(createContactSchema), contactController.createContact);
 router.get('/get', contactController.getContacts);
+router.get('/get-all', contactController.getAllContacts);
 router.get('/get/:id', contactController.getContact);
 router.put('/update/:id', validate(updateContactSchema), contactController.updateContact);
 router.delete('/delete/:id', contactController.deleteContact);
