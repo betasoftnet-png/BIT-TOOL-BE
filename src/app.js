@@ -35,10 +35,12 @@ app.get('/health', (req, res) => {
 const calculatorRoutes = require('./modules/calculator/routes/calculator.routes');
 const compareRoutes = require('./modules/calculator/routes/compare.routes');
 const commonRoutes = require('./modules/common/routes/common.routes');
+const contactRoutes = require('./modules/contacts/routes/contact.routes');
 
 // Mount routes
 app.use('/api/calculator', calculatorRoutes);
 app.use('/api/compare', compareRoutes);
+app.use('/api/contacts', contactRoutes);
 app.use('/api', commonRoutes);
 
 // Handle unhandled routes
