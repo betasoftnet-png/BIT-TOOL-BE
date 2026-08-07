@@ -10,6 +10,7 @@ router.use(requireAuth);
 // Session Routes
 router.post('/sessions', validate(createSessionSchema), calculatorController.createSession);
 router.get('/history', calculatorController.getHistory);
+router.get('/history/all', calculatorController.getAllHistory);
 router.get('/sessions/:id', calculatorController.getSession);
 router.put('/sessions/:id', validate(updateSessionSchema), calculatorController.updateSession);
 router.delete('/sessions/:id', calculatorController.deleteSession);

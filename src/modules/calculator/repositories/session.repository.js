@@ -44,6 +44,29 @@ class SessionRepository {
     });
   }
 
+  async findAllSessionsByUser(userEmail, query = {}) {
+    const { limit = 10, offset = 0, isArchived, mode, categoryId } = query;
+    const whereClause = { userEmail };
+
+    if (isArchived !== undefined) whereClause.isArchived = isArchived;
+    if (mode) whereClause.mode = mode;
+    if (categoryId) whereClause.categoryId = categoryId;
+
+    return await models.CalculatorSession.findAndCountAll({
+      where: whereClause,
+      limit,
+      offset,
+      include: [
+        { model: models.CalculatorItem, as: 'items' }
+      ],
+      order: [
+        ['updatedAt', 'DESC'],
+        [{ model: models.CalculatorItem, as: 'items' }, 'sequence', 'ASC']
+      ],
+      distinct: true
+    });
+  }
+
   async update(id, data) {
     const session = await models.CalculatorSession.findByPk(id);
     if (!session) return null;

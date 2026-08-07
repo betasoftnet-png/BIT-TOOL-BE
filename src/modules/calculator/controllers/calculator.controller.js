@@ -32,6 +32,16 @@ exports.getHistory = async (req, res, next) => {
   }
 };
 
+exports.getAllHistory = async (req, res, next) => {
+  try {
+    const { email } = req.user;
+    const history = await calculatorService.getAllHistory(email, req.query);
+    return ApiResponse.success(res, history, 'All history retrieved successfully across applications');
+  } catch (error) {
+    next(error);
+  }
+};
+
 exports.updateSession = async (req, res, next) => {
   try {
     const { email, appName } = req.user;

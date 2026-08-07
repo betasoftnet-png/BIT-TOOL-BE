@@ -36,6 +36,10 @@ class CalculatorService {
     return await sessionRepository.findByUserAndApp(userEmail, applicationName, query);
   }
 
+  async getAllHistory(userEmail, query) {
+    return await sessionRepository.findAllSessionsByUser(userEmail, query);
+  }
+
   async updateSession(sessionId, userEmail, applicationName, data) {
     await this.getSessionById(sessionId, userEmail, applicationName); // Auth check
     return await sessionRepository.update(sessionId, data);
