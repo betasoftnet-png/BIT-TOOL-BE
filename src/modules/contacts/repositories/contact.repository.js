@@ -37,6 +37,18 @@ class ContactRepository {
     return await contact.update(data);
   }
 
+  async findByExternalId(externalId, userEmail) {
+    return await models.Contact.findOne({
+      where: { externalId, userEmail }
+    });
+  }
+
+  async updateByExternalId(externalId, userEmail, data) {
+    const contact = await this.findByExternalId(externalId, userEmail);
+    if (!contact) return null;
+    return await contact.update(data);
+  }
+
   async delete(id, userEmail, applicationName) {
     const contact = await this.findById(id, userEmail, applicationName);
     if (!contact) return null;

@@ -52,6 +52,17 @@ exports.updateContact = async (req, res, next) => {
   }
 };
 
+exports.updateExternalContact = async (req, res, next) => {
+  try {
+    const { email } = req.user;
+    // We omit appName here because we are finding by externalId and userEmail
+    const contact = await contactService.updateExternalContact(req.params.externalId, email, req.body);
+    return ApiResponse.success(res, contact, 'Contact updated successfully via external ID');
+  } catch (error) {
+    next(error);
+  }
+};
+
 exports.deleteContact = async (req, res, next) => {
   try {
     const { email, appName } = req.user;

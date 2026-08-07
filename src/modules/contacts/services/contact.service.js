@@ -35,6 +35,14 @@ class ContactService {
     return updated;
   }
 
+  async updateExternalContact(externalId, userEmail, data) {
+    const updated = await contactRepository.updateByExternalId(externalId, userEmail, data);
+    if (!updated) {
+      throw new AppError('Contact not found', StatusCodes.NOT_FOUND);
+    }
+    return updated;
+  }
+
   async deleteContact(id, userEmail, applicationName) {
     const deleted = await contactRepository.delete(id, userEmail, applicationName);
     if (!deleted) {
