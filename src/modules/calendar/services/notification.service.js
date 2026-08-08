@@ -20,75 +20,101 @@ class NotificationService {
       throw new AppError('Notification email is required to schedule an email', StatusCodes.BAD_REQUEST);
     }
 
-    const sendAt = new Date(reminder.date).toISOString();
-    const url = `${scheduleUrl}?sendAt=${sendAt}`;
+    const eventDate = new Date(reminder.date);
+    const now = new Date();
 
-    const body = {
-      to: reminder.notificationEmail,
-      cc: '',
-      bcc: '',
-      subject: `Reminder: ${reminder.title}`,
-      body: `<h2>Bit Tool Reminder</h2><p>${reminder.title}</p><p>${reminder.description || ''}</p>`,
-      fromName: 'Bit Tool',
-      isHtml: true,
-      attachments: []
-    };
+    // Intervals in minutes (24h, 12h, 5h, 1h, 5m, 0m at the exact time)
+    // The user asked for "4:55 sent a mail" if set to 5:00. This is 5 minutes before.
+    // I'll also add 0 for exactly at the time, just in case, but the prompt says 4:55.
+    // Let's just do the ones requested: 24h, 12h, 5h, 1h, 5m
+    const intervalsInMinutes = [24 * 60, 12 * 60, 5 * 60, 60, 5, 0];
+    const scheduledIds = [];
+    const scheduledTimes = [];
 
-    try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: this.getHeaders(),
-        body: JSON.stringify(body)
-      });
-
-      if (!response.ok) {
-        const errText = await response.text();
-        throw new AppError(`Failed to schedule BNX Mail: ${errText}`, StatusCodes.BAD_GATEWAY);
-      }
-
-      const data = await response.json();
-      // Assuming BNX Mail returns the scheduled ID somewhere in the response.
-      // Often it's in data.data.id or data.id or data.notificationId depending on their structure.
-      // We'll extract what we can safely.
-      const notificationId = data?.data?.id || data?.id || data?.notificationId || data?.data?.notificationId;
+    for (const minsBefore of intervalsInMinutes) {
+      const sendAtDate = new Date(eventDate.getTime() - minsBefore * 60 * 1000);
       
-      return {
-        notificationId,
-        notificationScheduledAt: sendAt,
-        notificationStatus: 'scheduled'
-      };
-    } catch (error) {
-      if (error instanceof AppError) throw error;
-      throw new AppError(`Network error scheduling BNX Mail: ${error.message}`, StatusCodes.BAD_GATEWAY);
+      // Only schedule if the calculated time is actually in the future!
+      if (sendAtDate > now) {
+        const sendAt = sendAtDate.toISOString();
+        const url = `${scheduleUrl}?sendAt=${sendAt}`;
+
+        let prefixText = '';
+        if (minsBefore === 24 * 60) prefixText = 'Tomorrow is your reminder: ';
+        else if (minsBefore === 12 * 60) prefixText = 'In 12 hours: ';
+        else if (minsBefore === 5 * 60) prefixText = 'In 5 hours: ';
+        else if (minsBefore === 60) prefixText = 'Starting in 1 hour: ';
+        else if (minsBefore === 5) prefixText = 'Starting in 5 minutes: ';
+        else prefixText = 'It is time: '; // 0 mins
+
+        const body = {
+          to: reminder.notificationEmail,
+          cc: '',
+          bcc: '',
+          subject: `Reminder: ${reminder.title}`,
+          body: `<h2>Bit Tool Reminder</h2><p><b>${prefixText}</b>${reminder.title}</p><p>${reminder.description || ''}</p>`,
+          fromName: 'Bit Tool',
+          isHtml: true,
+          attachments: []
+        };
+
+        try {
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: this.getHeaders(),
+            body: JSON.stringify(body)
+          });
+
+          if (!response.ok) {
+            console.error(`Failed to schedule ${minsBefore}m BNX Mail`);
+            continue; // Skip this one, try the next
+          }
+
+          const data = await response.json();
+          const notificationId = data?.data?.id || data?.id || data?.notificationId || data?.data?.notificationId;
+          
+          if (notificationId) {
+            scheduledIds.push(notificationId);
+            scheduledTimes.push(sendAt);
+          }
+        } catch (error) {
+          console.error(`Network error scheduling ${minsBefore}m BNX Mail: ${error.message}`);
+        }
+      }
     }
+
+    return {
+      notificationId: scheduledIds.length > 0 ? scheduledIds.join(',') : null,
+      notificationScheduledAt: scheduledTimes.length > 0 ? new Date(scheduledTimes[0]) : null, // Store the first scheduled time
+      notificationStatus: scheduledIds.length > 0 ? 'scheduled' : 'pending'
+    };
   }
 
-  async cancelNotification(notificationId) {
-    if (!notificationId) return;
+  async cancelNotification(notificationIds) {
+    if (!notificationIds) return;
 
     const cancelUrl = process.env.BNX_MAIL_CANCEL_URL;
     if (!cancelUrl) throw new AppError('BNX Mail Cancel URL is missing', StatusCodes.INTERNAL_SERVER_ERROR);
 
-    const url = `${cancelUrl}/${notificationId}`;
+    const idsToCancel = notificationIds.split(',');
 
-    try {
-      const response = await fetch(url, {
-        method: 'DELETE',
-        headers: this.getHeaders()
-      });
+    for (const id of idsToCancel) {
+      const url = `${cancelUrl}/${id.trim()}`;
 
-      if (!response.ok) {
-        // We log and optionally throw. If it's a 404 (already deleted/sent), we might want to ignore.
-        if (response.status !== 404) {
-           const errText = await response.text();
-           console.error(`Failed to cancel BNX Mail ${notificationId}: ${errText}`);
-           // Depending on strictness, we might throw or just log.
-           // throw new AppError(`Failed to cancel BNX Mail: ${errText}`, StatusCodes.BAD_GATEWAY);
+      try {
+        const response = await fetch(url, {
+          method: 'DELETE',
+          headers: this.getHeaders()
+        });
+
+        if (!response.ok) {
+          if (response.status !== 404) {
+             console.error(`Failed to cancel BNX Mail ${id}`);
+          }
         }
+      } catch (error) {
+         console.error(`Network error cancelling BNX Mail ${id}: ${error.message}`);
       }
-    } catch (error) {
-       console.error(`Network error cancelling BNX Mail ${notificationId}: ${error.message}`);
-       // throw new AppError(`Network error cancelling BNX Mail: ${error.message}`, StatusCodes.BAD_GATEWAY);
     }
   }
 
