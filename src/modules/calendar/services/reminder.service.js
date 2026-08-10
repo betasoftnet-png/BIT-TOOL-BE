@@ -8,8 +8,12 @@ class ReminderService {
     // Basic payload
     let payload = { ...data, userEmail, applicationName };
 
+    // Auto-fill notification details if the frontend omits them
+    if (!payload.notificationType) payload.notificationType = 'email';
+    if (!payload.notificationEmail) payload.notificationEmail = userEmail;
+
     // Schedule notification if requested
-    if (data.notificationType === 'email' && data.notificationEmail) {
+    if (payload.notificationType === 'email' && payload.notificationEmail) {
       const scheduleResult = await notificationService.scheduleNotification(payload);
       payload = { ...payload, ...scheduleResult };
     }
@@ -40,19 +44,27 @@ class ReminderService {
     
     let payload = { ...data };
 
+    // Auto-fill fallback for update if they are missing
+    const currentNotificationType = payload.notificationType || existing.notificationType || 'email';
+    const currentNotificationEmail = payload.notificationEmail || existing.notificationEmail || userEmail;
+    
+    // Set them in payload so they are saved to DB
+    payload.notificationType = currentNotificationType;
+    payload.notificationEmail = currentNotificationEmail;
+
     // Check if notification details changed
     const needsReschedule = 
       (data.date && new Date(data.date).toISOString() !== new Date(existing.date).toISOString()) ||
-      (data.notificationEmail && data.notificationEmail !== existing.notificationEmail) ||
+      (currentNotificationEmail !== existing.notificationEmail) ||
       (data.title && data.title !== existing.title);
 
-    if (needsReschedule && (data.notificationType === 'email' || existing.notificationType === 'email')) {
-      const dummyReminder = { ...existing.toJSON(), ...data }; // Merge to construct full object for reschedule
+    if (needsReschedule && currentNotificationType === 'email') {
+      const dummyReminder = { ...existing.toJSON(), ...payload }; // Merge to construct full object for reschedule
       if (dummyReminder.notificationEmail) {
         const scheduleResult = await notificationService.rescheduleNotification(dummyReminder, existing.notificationId);
         payload = { ...payload, ...scheduleResult };
       } else if (existing.notificationId) {
-        // notificationEmail was removed, cancel existing
+        // notificationEmail was removed (shouldn't happen with fallback, but safe), cancel existing
         await notificationService.cancelNotification(existing.notificationId);
         payload.notificationId = null;
         payload.notificationStatus = 'cancelled';
