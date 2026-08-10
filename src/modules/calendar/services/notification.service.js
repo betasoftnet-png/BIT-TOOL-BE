@@ -13,20 +13,26 @@ class NotificationService {
   }
 
   async scheduleNotification(reminder) {
+    console.log('--- [BNX Mail] Starting Schedule Process ---');
+    console.log('[BNX Mail] Reminder Payload:', JSON.stringify(reminder, null, 2));
+
     const scheduleUrl = process.env.BNX_MAIL_SCHEDULE_URL;
-    if (!scheduleUrl) throw new AppError('BNX Mail Schedule URL is missing', StatusCodes.INTERNAL_SERVER_ERROR);
+    if (!scheduleUrl) {
+      console.error('[BNX Mail] ERROR: BNX_MAIL_SCHEDULE_URL is missing in .env');
+      throw new AppError('BNX Mail Schedule URL is missing', StatusCodes.INTERNAL_SERVER_ERROR);
+    }
 
     if (!reminder.notificationEmail) {
+      console.error('[BNX Mail] ERROR: No notificationEmail provided in the payload.');
       throw new AppError('Notification email is required to schedule an email', StatusCodes.BAD_REQUEST);
     }
 
     const eventDate = new Date(reminder.date);
     const now = new Date();
+    
+    console.log(`[BNX Mail] Event Date: ${eventDate.toISOString()} | Current Time: ${now.toISOString()}`);
 
     // Intervals in minutes (24h, 12h, 5h, 1h, 5m, 0m at the exact time)
-    // The user asked for "4:55 sent a mail" if set to 5:00. This is 5 minutes before.
-    // I'll also add 0 for exactly at the time, just in case, but the prompt says 4:55.
-    // Let's just do the ones requested: 24h, 12h, 5h, 1h, 5m
     const intervalsInMinutes = [24 * 60, 12 * 60, 5 * 60, 60, 5, 0];
     const scheduledIds = [];
     const scheduledTimes = [];
@@ -38,6 +44,8 @@ class NotificationService {
       if (sendAtDate > now) {
         const sendAt = sendAtDate.toISOString();
         const url = `${scheduleUrl}?sendAt=${sendAt}`;
+        
+        console.log(`[BNX Mail] Scheduling interval: -${minsBefore}m at exact time: ${sendAt}`);
 
         let prefixText = '';
         if (minsBefore === 24 * 60) prefixText = 'Tomorrow is your reminder: ';
@@ -66,23 +74,31 @@ class NotificationService {
           });
 
           if (!response.ok) {
-            console.error(`Failed to schedule ${minsBefore}m BNX Mail`);
+            const errText = await response.text();
+            console.error(`[BNX Mail] ERROR from BNX API for ${minsBefore}m interval: Status ${response.status}, Body: ${errText}`);
             continue; // Skip this one, try the next
           }
 
           const data = await response.json();
+          console.log(`[BNX Mail] SUCCESS API Response for ${minsBefore}m:`, JSON.stringify(data));
+          
           const notificationId = data?.data?.id || data?.id || data?.notificationId || data?.data?.notificationId;
           
           if (notificationId) {
             scheduledIds.push(notificationId);
             scheduledTimes.push(sendAt);
+          } else {
+             console.warn(`[BNX Mail] WARNING: BNX Mail succeeded but didn't return an obvious ID. Response data:`, data);
           }
         } catch (error) {
-          console.error(`Network error scheduling ${minsBefore}m BNX Mail: ${error.message}`);
+          console.error(`[BNX Mail] FATAL Network error scheduling ${minsBefore}m interval: ${error.message}`);
         }
+      } else {
+        console.log(`[BNX Mail] Skipping interval -${minsBefore}m because calculated time (${sendAtDate.toISOString()}) is in the past.`);
       }
     }
 
+    console.log(`[BNX Mail] Finished scheduling. IDs generated: ${scheduledIds.join(',')}`);
     return {
       notificationId: scheduledIds.length > 0 ? scheduledIds.join(',') : null,
       notificationScheduledAt: scheduledTimes.length > 0 ? new Date(scheduledTimes[0]) : null, // Store the first scheduled time
