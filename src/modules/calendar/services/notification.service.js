@@ -7,7 +7,7 @@ class NotificationService {
     if (!token) throw new AppError('BNX Mail Token is missing in configuration', StatusCodes.INTERNAL_SERVER_ERROR);
     
     return {
-      'Authorization': `Bearer ${token}`,
+      'X-Public-Mail-Token': token,
       'Content-Type': 'application/json'
     };
   }
