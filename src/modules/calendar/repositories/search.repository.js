@@ -11,7 +11,10 @@ class SearchRepository {
       reminders: []
     };
 
-    const commonWhere = { userEmail, applicationName };
+    const commonWhere = { userEmail };
+    if (filters.allApps !== 'true') {
+      commonWhere.applicationName = applicationName;
+    }
     if (categoryId) commonWhere.categoryId = categoryId;
 
     // Build text search
