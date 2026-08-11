@@ -3,7 +3,13 @@ const { Op } = require('sequelize');
 
 class SearchRepository {
   async unifiedSearch(userEmail, applicationName, filters) {
-    const { query, categoryId, startDate, endDate, status } = filters;
+    let { query, categoryId, startDate, endDate, status, allApps, date } = filters;
+    
+    // If a single 'date' is passed, map it to both start and end for a single-day query
+    if (date) {
+      startDate = date;
+      endDate = date;
+    }
     
     const results = {
       events: [],
