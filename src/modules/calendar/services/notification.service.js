@@ -55,12 +55,38 @@ class NotificationService {
         else if (minsBefore === 5) prefixText = 'Starting in 5 minutes: ';
         else prefixText = 'It is time: '; // 0 mins
 
+        const beautifulHtml = `
+          <div style="font-family: 'Inter', Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f9fafb; padding: 40px 20px; border-radius: 12px;">
+            <div style="background-color: #ffffff; border-radius: 16px; padding: 40px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); text-align: center;">
+              <div style="background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); width: 64px; height: 64px; border-radius: 16px; margin: 0 auto 24px; display: inline-flex; align-items: center; justify-content: center;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-top: 16px;">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+              </div>
+              <h1 style="margin: 0 0 12px; font-size: 24px; font-weight: 700; color: #111827;">Bit Tool Reminder</h1>
+              <p style="margin: 0 0 24px; font-size: 16px; color: #6b7280; font-weight: 500;">
+                <span style="color: #4f46e5; font-weight: 600;">${prefixText}</span> ${reminder.title}
+              </p>
+              ${reminder.description ? `<div style="background-color: #f3f4f6; border-radius: 8px; padding: 20px; margin-bottom: 32px; text-align: left;"><p style="margin: 0; font-size: 15px; color: #374151; line-height: 1.6;">${reminder.description}</p></div>` : ''}
+              
+              <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e5e7eb;">
+                <p style="margin: 0; font-size: 13px; color: #9ca3af;">
+                  Powered by <strong style="color: #6366f1; font-weight: 500;">Bit Tool Calendar</strong> &amp; BNX Mail
+                </p>
+              </div>
+            </div>
+          </div>
+        `;
+
         const body = {
           to: reminder.notificationEmail,
           cc: '',
           bcc: '',
           subject: `Reminder: ${reminder.title}`,
-          body: `<h2>Bit Tool Reminder</h2><p><b>${prefixText}</b>${reminder.title}</p><p>${reminder.description || ''}</p>`,
+          body: beautifulHtml,
           fromName: 'Bit Tool',
           isHtml: true,
           attachments: []
