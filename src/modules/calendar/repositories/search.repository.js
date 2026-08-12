@@ -55,8 +55,10 @@ class SearchRepository {
     let dateSearchNoteReminder = {};
     
     if (startDate && endDate) {
-      const start = new Date(`${startDate}T00:00:00.000Z`);
-      const end = new Date(`${endDate}T23:59:59.999Z`);
+      // If the string already contains a 'T', it is a full ISO string (from frontend local bounds)
+      // Otherwise, it's just 'YYYY-MM-DD', so we append the UTC bounds.
+      const start = new Date(startDate.includes('T') ? startDate : `${startDate}T00:00:00.000Z`);
+      const end = new Date(endDate.includes('T') ? endDate : `${endDate}T23:59:59.999Z`);
       
       dateSearchEvent = {
         [Op.or]: [
