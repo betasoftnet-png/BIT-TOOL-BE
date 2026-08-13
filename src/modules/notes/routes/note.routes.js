@@ -1,12 +1,8 @@
 const express = require('express');
-const { protect } = require('../../../shared/middlewares/auth');
-const extractAppMeta = require('../../../shared/middlewares/extractAppMeta');
 const noteController = require('../controllers/note.controller');
 
 const router = express.Router();
 
-router.use(protect);
-router.use(extractAppMeta);
 
 router.post('/create', noteController.createNote);
 router.get('/', noteController.getNotes);
