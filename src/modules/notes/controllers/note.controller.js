@@ -9,7 +9,7 @@ const createNote = async (req, res, next) => {
     const applicationName = req.user.appName || 'Bit Tool';
     
     const note = await NoteService.createNote(userEmail, applicationName, req.body);
-    return ApiResponse.created(res, note, 'Note created successfully');
+    return ApiResponse.success(res, note, 'Note created successfully', StatusCodes.CREATED);
   } catch (error) {
     next(error);
   }
