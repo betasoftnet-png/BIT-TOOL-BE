@@ -13,6 +13,7 @@ router.get('/get-all', contactController.getAllContacts);
 router.get('/get/:id', contactController.getContact);
 router.put('/update/:id', validate(updateContactSchema), contactController.updateContact);
 router.put('/external/:externalId', validate(updateContactSchema), contactController.updateExternalContact);
+router.delete('/external/:externalId', contactController.deleteExternalContact);
 router.delete('/delete/:id', contactController.deleteContact);
 
 module.exports = router;

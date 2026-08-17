@@ -4,6 +4,12 @@ const { StatusCodes } = require('http-status-codes');
 
 class ContactService {
   async createContact(userEmail, applicationName, data) {
+    if (data.externalId) {
+      const existing = await contactRepository.findByExternalId(data.externalId, userEmail, applicationName);
+      if (existing) {
+        throw new AppError('A contact with this externalId already exists for this app', StatusCodes.CONFLICT);
+      }
+    }
     return await contactRepository.create({
       ...data,
       userEmail,
@@ -35,12 +41,20 @@ class ContactService {
     return updated;
   }
 
-  async updateExternalContact(externalId, userEmail, data) {
-    const updated = await contactRepository.updateByExternalId(externalId, userEmail, data);
+  async updateExternalContact(externalId, userEmail, applicationName, data) {
+    const updated = await contactRepository.updateByExternalId(externalId, userEmail, applicationName, data);
     if (!updated) {
       throw new AppError('Contact not found', StatusCodes.NOT_FOUND);
     }
     return updated;
+  }
+
+  async deleteExternalContact(externalId, userEmail, applicationName) {
+    const deleted = await contactRepository.deleteByExternalId(externalId, userEmail, applicationName);
+    if (!deleted) {
+      throw new AppError('Contact not found', StatusCodes.NOT_FOUND);
+    }
+    return true;
   }
 
   async deleteContact(id, userEmail, applicationName) {
