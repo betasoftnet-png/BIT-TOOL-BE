@@ -1,11 +1,20 @@
 const eventService = require('../services/event.service');
 const ApiResponse = require('../../../shared/responses/ApiResponse');
 const { StatusCodes } = require('http-status-codes');
+const { models } = require('../../../database/connection');
+const { Notification } = models;
 
 exports.createEvent = async (req, res, next) => {
   try {
     const { email, appName } = req.user;
     const event = await eventService.createEvent(email, appName, req.body);
+    
+    await Notification.create({
+      userEmail: email,
+      title: 'New Event Scheduled',
+      message: `Your event "${req.body.title}" has been scheduled for ${req.body.date}.`,
+    });
+
     return ApiResponse.success(res, event, 'Event created successfully', StatusCodes.CREATED);
   } catch (error) {
     next(error);

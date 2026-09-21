@@ -38,6 +38,7 @@ const commonRoutes = require('./modules/common/routes/common.routes');
 const contactRoutes = require('./modules/contacts/routes/contact.routes');
 const calendarRoutes = require('./modules/calendar/routes/calendar.routes');
 const noteRoutes = require('./modules/notes/routes/note.routes');
+const notificationRoutes = require('./modules/notifications/routes/notification.routes');
 
 // Mount routes
 app.use('/api/calculator', calculatorRoutes);
@@ -45,6 +46,7 @@ app.use('/api/compare', compareRoutes);
 app.use('/api/contacts', contactRoutes);
 app.use('/api/calendar', calendarRoutes);
 app.use('/api/notes', noteRoutes);
+app.use('/api/notifications', notificationRoutes);
 app.use('/api', commonRoutes);
 
 // Handle unhandled routes

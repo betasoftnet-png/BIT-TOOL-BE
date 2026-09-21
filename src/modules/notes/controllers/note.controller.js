@@ -2,6 +2,8 @@ const { StatusCodes } = require('http-status-codes');
 const ApiResponse = require('../../../shared/responses/ApiResponse');
 const AppError = require('../../../shared/exceptions/AppError');
 const NoteService = require('../services/note.service');
+const { models } = require('../../../database/connection');
+const { Notification } = models;
 
 const createNote = async (req, res, next) => {
   try {
@@ -9,6 +11,13 @@ const createNote = async (req, res, next) => {
     const applicationName = req.user.appName || 'Bit Tool';
     
     const note = await NoteService.createNote(userEmail, applicationName, req.body);
+    
+    await Notification.create({
+      userEmail: req.user.email,
+      title: 'Note Created',
+      message: `Your note "${req.body.title}" was saved successfully.`,
+    });
+
     return ApiResponse.success(res, note, 'Note created successfully', StatusCodes.CREATED);
   } catch (error) {
     next(error);

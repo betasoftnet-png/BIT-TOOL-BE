@@ -1,11 +1,20 @@
 const reminderService = require('../services/reminder.service');
 const ApiResponse = require('../../../shared/responses/ApiResponse');
 const { StatusCodes } = require('http-status-codes');
+const { models } = require('../../../database/connection');
+const { Notification } = models;
 
 exports.createReminder = async (req, res, next) => {
   try {
     const { email, appName } = req.user;
     const reminder = await reminderService.createReminder(email, appName, req.body);
+    
+    await Notification.create({
+      userEmail: email,
+      title: 'Reminder Set',
+      message: `Reminder set: "${req.body.title}".`,
+    });
+
     return ApiResponse.success(res, reminder, 'Reminder created successfully', StatusCodes.CREATED);
   } catch (error) {
     next(error);
