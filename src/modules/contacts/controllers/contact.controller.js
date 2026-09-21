@@ -2,14 +2,13 @@ const contactService = require('../services/contact.service');
 const ApiResponse = require('../../../shared/responses/ApiResponse');
 const { StatusCodes } = require('http-status-codes');
 const { models } = require('../../../database/connection');
-const { Notification } = models;
 
 exports.createContact = async (req, res, next) => {
   try {
     const { email, appName } = req.user;
     const contact = await contactService.createContact(email, appName, req.body);
     
-    await Notification.create({
+    await models.Notification.create({
       userEmail: email,
       title: 'New Contact Added',
       message: `You successfully added ${req.body.name} to your contacts.`,
