@@ -9,6 +9,11 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       allowNull: false,
     },
+    applicationName: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      defaultValue: 'Bit Tool',
+    },
     title: {
       type: DataTypes.STRING,
       allowNull: false,

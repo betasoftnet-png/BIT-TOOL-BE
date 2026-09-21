@@ -10,6 +10,7 @@ exports.createReminder = async (req, res, next) => {
     
     await models.Notification.create({
       userEmail: email,
+      applicationName: appName,
       title: 'Reminder Set',
       message: `Reminder set: "${req.body.title}".`,
     });

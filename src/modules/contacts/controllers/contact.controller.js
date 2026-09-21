@@ -10,6 +10,7 @@ exports.createContact = async (req, res, next) => {
     
     await models.Notification.create({
       userEmail: email,
+      applicationName: appName,
       title: 'New Contact Added',
       message: `You successfully added ${req.body.name} to your contacts.`,
     });

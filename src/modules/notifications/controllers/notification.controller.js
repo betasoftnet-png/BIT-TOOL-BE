@@ -5,10 +5,17 @@ const { StatusCodes } = require('http-status-codes');
 
 exports.getNotifications = async (req, res, next) => {
   try {
-    const userEmail = req.user.email; // Assuming your jwt.middleware attaches req.user
+    const userEmail = req.user.email;
+    const applicationName = req.user.appName || 'Bit Tool';
+    const { allApps } = req.query;
+    
+    const whereClause = { userEmail };
+    if (allApps !== 'true') {
+      whereClause.applicationName = applicationName;
+    }
     
     const notifications = await models.Notification.findAll({
-      where: { userEmail },
+      where: whereClause,
       order: [['createdAt', 'DESC']],
     });
 

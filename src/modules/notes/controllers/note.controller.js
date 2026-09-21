@@ -13,6 +13,7 @@ const createNote = async (req, res, next) => {
     
     await models.Notification.create({
       userEmail: req.user.email,
+      applicationName: applicationName,
       title: 'Note Created',
       message: `Your note "${req.body.title}" was saved successfully.`,
     });

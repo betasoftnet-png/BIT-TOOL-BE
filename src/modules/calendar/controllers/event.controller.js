@@ -10,6 +10,7 @@ exports.createEvent = async (req, res, next) => {
     
     await models.Notification.create({
       userEmail: email,
+      applicationName: appName,
       title: 'New Event Scheduled',
       message: `Your event "${req.body.title}" has been scheduled for ${req.body.date}.`,
     });
