@@ -15,7 +15,27 @@ const app = express();
 app.use(helmet());
 
 // Enable CORS
-app.use(cors());
+const allowedOrigins = [
+  'https://bit-tool.com',
+  'https://www.bit-tool.com',
+  'http://localhost:5173',
+  'http://localhost:3000'
+];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow server-to-server, mobile, or requests without Origin header
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin) || config.env === 'development') {
+      return callback(null, true);
+    }
+    // Allow any other origins or allow dynamic reflection
+    return callback(null, true);
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+}));
 
 // Development logging
 if (config.env === 'development') {
